@@ -10,46 +10,42 @@ import {
 } from '../utils/calculations';
 
 interface FileUploadProps {
-  onDataProcessed: (metrics: QAMetrics) => void;
+  onDataProcessed: (metrics: QAMetrics, data: any[]) => void;
 }
 
 const FileUpload: React.FC<FileUploadProps> = ({ onDataProcessed }) => {
   const toast = useToast();
 
-  const processData = (results: Papa.ParseResult<any>) => {
-    try {
-      const data = results.data;
-      const metrics: QAMetrics = {
-        defectLeakageRate: calculateDefectLeakage(data),
-        codeCoverage: calculateCodeCoverage(data),
-        performanceLeakage: calculatePerformanceLeakage(data),
-        bugsPerPhase: calculateBugsPerPhase(data),
-      };
-      
-      onDataProcessed(metrics);
-    } catch (error) {
-      toast({
-        title: 'Error processing file',
-        description: 'Please check the file format and try again',
-        status: 'error',
-        duration: 5000,
-      });
-    }
-  };
-
   const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       Papa.parse(file, {
-        complete: processData,
         header: true,
-        skipEmptyLines: true,
+        complete: (results) => {
+          try {
+            const data = results.data as any[];
+            const metrics: QAMetrics = {
+              defectLeakageRate: calculateDefectLeakage(data),
+              codeCoverage: calculateCodeCoverage(data),
+              performanceLeakage: calculatePerformanceLeakage(data),
+              bugsPerPhase: calculateBugsPerPhase(data),
+            };
+            onDataProcessed(metrics, data);
+          } catch (error) {
+            toast({
+              title: 'Error processing file',
+              description: 'Please check the file format and try again',
+              status: 'error',
+              duration: 5000,
+            });
+          }
+        },
       });
     }
-  }, []);
+  }, [onDataProcessed, toast]);
 
   return (
-    <Box p={6} borderWidth={1} borderRadius="lg">
+    <Box>
       <Text mb={4}>Upload your QA metrics spreadsheet (CSV format)</Text>
       <input
         type="file"
