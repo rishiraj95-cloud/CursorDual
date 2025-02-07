@@ -38,7 +38,7 @@ const Dashboard: React.FC = () => {
           
           {metrics && (
             <Box>
-              <MetricsDisplay metrics={metrics} />
+              <MetricsDisplay metrics={metrics} csvData={csvData} />
             </Box>
           )}
         </Grid>
